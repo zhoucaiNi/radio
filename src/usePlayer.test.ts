@@ -96,6 +96,24 @@ describe('usePlayer', () => {
     expect(hook.result.current.status).toBe('idle')
   })
 
+  it('plays a primed station synchronously, without waiting for the network', async () => {
+    const getStreams = vi.fn((id: string) => Promise.resolve(mirrors(id)))
+    const { audio, hook } = setup(getStreams)
+    await act(async () => hook.result.current.prime('bossa'))
+    act(() => void hook.result.current.play('bossa'))
+    expect(audio.src).toBe(mirrors('bossa')[0])
+    expect(audio.play).toHaveBeenCalledTimes(1)
+    expect(getStreams).toHaveBeenCalledTimes(1)
+  })
+
+  it('a failed prime falls back to fetching on play', async () => {
+    const getStreams = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(mirrors('bossa'))
+    const { audio, hook } = setup(getStreams)
+    await act(async () => hook.result.current.prime('bossa'))
+    await act(() => hook.result.current.play('bossa'))
+    expect(audio.src).toBe(mirrors('bossa')[0])
+  })
+
   it('setVolume sets the audio volume', () => {
     const { audio, hook } = setup()
     act(() => hook.result.current.setVolume(0.3))

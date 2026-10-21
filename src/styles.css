@@ -162,13 +162,12 @@ a {
   font-size: 13px;
   line-height: 20px;
 }
-@media (prefers-color-scheme: dark) {
-  .site-footer {
-    color: #eef2f7;
-  }
-  .site-footer a {
-    color: #eef2f7;
-  }
+/* The footer sits on the hills, so it gets its own cream pill to keep text at AA contrast. */
+.footer-note {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--window-body);
 }
 
 /* Window */

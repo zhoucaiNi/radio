@@ -11,10 +11,11 @@ import './styles.css'
 
 const KNOB_SWEEP = 240
 
-// Keys typed into a control belong to that control (a focused button already
-// handles Space natively, the slider handles arrows).
-function ownsKeys(target: EventTarget | null) {
-  return target instanceof HTMLElement && target.closest('input, button, a, textarea, select') !== null
+// Keys typed into a control belong to that control: a focused button or link
+// already handles Space natively, and inputs handle arrows.
+function ownsKey(target: EventTarget | null, key: string) {
+  const owners = key === ' ' ? 'input, button, a, textarea, select' : 'input, textarea, select'
+  return target instanceof HTMLElement && target.closest(owners) !== null
 }
 
 export default function App() {
@@ -37,9 +38,15 @@ export default function App() {
 
   useEffect(load, [load])
 
+  const { prime, setVolume } = player
+
   useEffect(() => {
-    player.setVolume(stored.volume)
-  }, [player, stored.volume])
+    setVolume(stored.volume)
+  }, [setVolume, stored.volume])
+
+  useEffect(() => {
+    channels?.forEach((c) => prime(c.id))
+  }, [channels, prime])
 
   const list = channels ?? []
   const index = Math.max(0, list.findIndex((c) => c.id === selectedId))
@@ -77,7 +84,7 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
+      if (ownsKey(e.target, e.key) || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === ' ') {
         e.preventDefault()
         toggle()
@@ -139,7 +146,9 @@ export default function App() {
         </RadioWindow>
       </main>
       <footer className="site-footer">
-        Music by SomaFM, listener-supported · <a href="https://somafm.com/support/">donate</a>
+        <span className="footer-note">
+          Music by SomaFM, listener-supported · <a href="https://somafm.com/support/">donate</a>
+        </span>
       </footer>
     </div>
   )

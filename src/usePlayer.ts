@@ -17,6 +17,9 @@ export function usePlayer({ createAudio = () => new Audio(), getStreams = fetchS
   // The attempt that may still change the status; null after pause or a newer play().
   const attemptRef = useRef<Attempt | null>(null)
   const optsRef = useRef({ createAudio, getStreams })
+  // Stream lists fetched ahead of time, so play() can start inside the user's tap
+  // (Safari refuses audio that starts after an await on the network).
+  const streamsRef = useRef(new Map<string, string[]>())
 
   const audio = useCallback(() => {
     if (!audioRef.current) audioRef.current = optsRef.current.createAudio()
@@ -56,13 +59,28 @@ export function usePlayer({ createAudio = () => new Audio(), getStreams = fetchS
     }
   }, [audio, load])
 
+  const prime = useCallback((channelId: string) => {
+    if (streamsRef.current.has(channelId)) return
+    optsRef.current.getStreams(channelId).then(
+      (streams) => streamsRef.current.set(channelId, streams),
+      () => {},
+    )
+  }, [])
+
   const play = useCallback(
     async (channelId: string) => {
       const attempt: Attempt = { streams: [], index: -1 }
       attemptRef.current = attempt
       setStatus('loading')
+      const primed = streamsRef.current.get(channelId)
+      if (primed) {
+        attempt.streams = primed
+        load(attempt, 0)
+        return
+      }
       try {
         attempt.streams = await optsRef.current.getStreams(channelId)
+        streamsRef.current.set(channelId, attempt.streams)
       } catch {
         if (attemptRef.current === attempt) {
           attemptRef.current = null
@@ -88,5 +106,5 @@ export function usePlayer({ createAudio = () => new Audio(), getStreams = fetchS
     audio().volume = v
   }, [audio])
 
-  return { status, play, pause, setVolume }
+  return { status, prime, play, pause, setVolume }
 }

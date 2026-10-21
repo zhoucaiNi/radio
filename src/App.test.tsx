@@ -21,6 +21,7 @@ vi.mock('./somafm', async (importOriginal) => ({ ...(await importOriginal<object
 
 const player = vi.hoisted(() => ({
   status: 'idle' as PlayerStatus,
+  prime: vi.fn(),
   play: vi.fn(),
   pause: vi.fn(),
   setVolume: vi.fn(),
@@ -83,6 +84,14 @@ describe('App', () => {
     await userEvent.keyboard(' ')
     expect(pressed()).toBe('Bossa')
     expect(player.play).not.toHaveBeenCalled()
+  })
+
+  it('arrow keys still change station after a button was clicked', async () => {
+    render(<App />)
+    const btn = await screen.findByRole('button', { name: 'play' })
+    btn.focus()
+    await userEvent.keyboard('{ArrowRight}')
+    expect(pressed()).toBe('Lush')
   })
 
   it('ignores station keys while the volume slider is focused', async () => {
