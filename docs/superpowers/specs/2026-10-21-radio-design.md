@@ -38,19 +38,33 @@ Attribution: footer "Music by SomaFM — listener-supported" linking to `https:/
 
 ## Page
 
-One screen, centered, works from 320px wide up.
+Design: direction **D, "Radio in a window"**, chosen from the mockups at
+https://claude.ai/artifact/TJ1C3MicVzK2HJeWm3GVMG (artboards "D · Radio in a window" and its
+phone version). One screen, works from 320px wide up.
 
-- Header: "radio" in Jockey One, small link back to zhoucai.me.
-- Tuner: the 8 channels as a horizontal row of cards (art + title); the selected one is
-  highlighted. Scrolls horizontally on narrow screens. Prev/next buttons beside it.
-- Player: big play/pause button, volume slider, the selected channel's description.
-- Now playing: "Artist — Title" for the current track, refreshed every 30s while playing.
-  Hidden if the request fails or returns nothing.
-- Footer: SomaFM attribution + donate link.
+- Backdrop: the zhoucai.me day scene, a white sky with the sun top-right and three layered hills
+  (`hill-light`, `moss`, `hill-deep`) along the bottom, drawn as inline SVG.
+- Header: "radio" in Jockey One, link back to zhoucai.me.
+- A Mac window (white title bar, three pastel dots, centered title "radio — <station>",
+  `radius-lg`, `shadow-card-lift`), up to 960px wide, cream body `#fff3e6`. Inside it, a radio:
+  - Speaker grille: decorative peach panel with dots (left column on desktop, a short band
+    on top on phones).
+  - Dial: dark panel `#0f1a2b` with the station name (Jockey One, `sun`), listener count,
+    the station description, and a tick scale with the 8 stations as short labels
+    (Groove, Lush, Bossa, Drone, Fluid, Space, Folk, Agent). A glowing peach needle slides to
+    the selected station. Each label is a button. On phones the scale scrolls sideways and shows
+    the track instead of the description.
+  - Controls: prev / next buttons either side of a decorative tuning knob whose pointer rotates
+    with the station (-120° to +120°), a `sun` "play"/"pause" button, a volume slider.
+  - Recently played: the last 3 tracks (2 on phones) from the songs endpoint (`songs[1..3]`),
+    under the controls; the current track is `songs[0]`, shown in the dial on phones and as
+    the first row on desktop. Hidden if the request fails.
+- Footer: "Music by SomaFM, listener-supported · donate".
 
-Look: zhoucai.me tokens (sky/sun/peach/dusk palette, Figtree body, Jockey One display),
-night palette under `prefers-color-scheme: dark`, motion off under
-`prefers-reduced-motion`. One accent color.
+Look: zhoucai.me tokens (Figtree body, Jockey One display, `sun` buttons, `peach-ink` slider).
+Night (`prefers-color-scheme: dark`; not mocked): page `#0f1a2b` with stars, hills under the
+site's night filter (brightness 0.5, saturate 1.3), window body `#1c1c1e`, grille and dial
+unchanged. The needle and knob animate (200ms) and are instant under `prefers-reduced-motion`.
 
 Keyboard: Space toggles play, ←/→ change channel (ignored while focus is in an input).
 
@@ -64,9 +78,11 @@ try/catch; defaults are `groovesalad` and `0.7`. Playback never autostarts (brow
 | `src/somafm.ts` | `LINEUP`, `fetchChannels()`, `fetchStreams(id)` (parse .pls → URL list), `fetchNowPlaying(id)`. Pure parsing helpers exported for tests. |
 | `src/usePlayer.ts` | Owns one `HTMLAudioElement`: `play(streams)`, `pause()`, `setVolume()`, status `idle / loading / playing / error`. On `error` event, moves to the next mirror; after the last one, status `error`. |
 | `src/useStoredState.ts` | Read/write `radio:v1` safely. |
-| `src/components/Tuner.tsx` | Channel row + prev/next. Props: channels, selectedId, onSelect. |
-| `src/components/Player.tsx` | Play/pause, volume, description. |
-| `src/components/NowPlaying.tsx` | Polls now-playing for the selected channel while playing. |
+| `src/components/Scene.tsx` | Backdrop SVG (sun, hills; stars at night). Decorative. |
+| `src/components/RadioWindow.tsx` | Window chrome: title bar + dots + title. Children = the radio. |
+| `src/components/Dial.tsx` | Station name, listeners, text line, tick scale, needle, station buttons. Props: channels, selectedId, onSelect. |
+| `src/components/Controls.tsx` | Prev/next, knob, play/pause, volume. |
+| `src/components/RecentlyPlayed.tsx` | Polls `songs/<id>.json` every 30s while playing; shows recent tracks. |
 | `src/App.tsx` | Loads channels, wires state, keyboard shortcuts, layout. |
 | `src/styles.css` | Tokens + layout. |
 
