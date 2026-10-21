@@ -1,0 +1,532 @@
+/* zhoucai.me tokens. Design: https://claude.ai/artifact/TJ1C3MicVzK2HJeWm3GVMG (D · Radio in a window) */
+:root {
+  --sun: #fed377;
+  --sun-hover: #ffc548;
+  --peach: #ffbb7a;
+  --peach-ink: #a2541a;
+  --cream: #fff3e6;
+  --dial: #0f1a2b;
+  --dial-ring: #2a3a52;
+  --dial-text: #d0d7e0;
+  --dial-muted: #94a1b2;
+  --ink: #14212b;
+  --ink-muted: #55636e;
+  --focus: #2b78a8;
+  --link-line: #72b8df;
+
+  --page: #ffffff;
+  --window-bar: #ffffff;
+  --window-body: var(--cream);
+  --line: #e3e8ec;
+  --row-line: #f0dcc6;
+  --text: var(--ink);
+  --muted: var(--ink-muted);
+  --btn-bg: #ffffff;
+  --hill-far: #bad578;
+  --hill-mid: #8fb021;
+  --hill-near: #718d14;
+  --hill-filter: none;
+  --sun-fill: var(--sun);
+  --stars: 0;
+  --dot-1: #ea8181;
+  --dot-2: #f2d777;
+  --dot-3: #6ed979;
+
+  --font-display: 'Jockey One', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0f1a2b;
+    --window-bar: #2c2c2e;
+    --window-body: #1c1c1e;
+    --line: #3a3a3c;
+    --row-line: #3a3a3c;
+    --text: #d0d7e0;
+    --muted: #94a1b2;
+    --btn-bg: #2c2c2e;
+    --hill-filter: brightness(0.5) saturate(1.3);
+    --sun-fill: #f3ebd3;
+    --stars: 1;
+    --focus: #8fcaf0;
+    --dot-1: #ff5f57;
+    --dot-2: #febc2e;
+    --dot-3: #28c840;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--text);
+  font: 400 17px/27px var(--font-body);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--text);
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 4px;
+}
+
+/* Page */
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.scene .sun {
+  fill: var(--sun-fill);
+}
+.scene .sun-glow {
+  fill: var(--sun-fill);
+  opacity: 0.35;
+}
+.scene .stars {
+  fill: #eef2f7;
+  opacity: var(--stars);
+}
+.scene .hill {
+  filter: var(--hill-filter);
+}
+.hill-far {
+  fill: var(--hill-far);
+}
+.hill-mid {
+  fill: var(--hill-mid);
+}
+.hill-near {
+  fill: var(--hill-near);
+}
+
+.site-header,
+.site-main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 40px;
+}
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 38px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+.home-link {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.site-main {
+  flex: 1;
+  padding: 0 16px 24px;
+}
+
+.site-footer {
+  padding: 0 16px 20px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .site-footer {
+    color: #eef2f7;
+  }
+  .site-footer a {
+    color: #eef2f7;
+  }
+}
+
+/* Window */
+.window {
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--window-body);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+.titlebar {
+  height: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  padding: 0 14px;
+  background: var(--window-bar);
+  border-bottom: 1px solid var(--line);
+}
+.dots {
+  display: flex;
+  gap: 8px;
+}
+.dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--dot-1);
+}
+.dots span:nth-child(2) {
+  background: var(--dot-2);
+}
+.dots span:nth-child(3) {
+  background: var(--dot-3);
+}
+.window-title {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.window-body {
+  padding: 28px;
+}
+
+/* Radio layout inside the window */
+.radio {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 28px;
+}
+.radio-main {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.grille {
+  border-radius: 12px;
+  background-color: var(--peach);
+  background-image: radial-gradient(circle, rgba(162, 84, 26, 0.55) 6px, transparent 6.5px);
+  background-size: 40px 40px;
+  background-position: 15px 20px;
+  min-height: 200px;
+}
+
+/* Dial */
+.dial {
+  border-radius: 12px;
+  background: var(--dial);
+  padding: 22px 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dial-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.dial-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 44px;
+  letter-spacing: 0.06em;
+  color: var(--sun);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dial-listeners {
+  flex: none;
+  font-size: 15px;
+  color: var(--dial-muted);
+}
+.dial-desc,
+.dial-now {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--dial-text);
+}
+.dial-now-label {
+  color: var(--dial-muted);
+}
+.dial-scroll {
+  overflow-x: auto;
+}
+.dial-scale {
+  position: relative;
+  padding-top: 22px;
+  /* minor ticks: four per station */
+  background: repeating-linear-gradient(
+      to right,
+      #55636e 0 1.5px,
+      transparent 1.5px calc(100% / (var(--n) * 4))
+    )
+    top left / 100% 8px no-repeat;
+  background-position: 0 10px;
+}
+.dial-needle {
+  position: absolute;
+  top: -4px;
+  bottom: -6px;
+  left: calc((var(--i) + 0.5) / var(--n) * 100%);
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--peach);
+  box-shadow: 0 0 10px rgba(255, 187, 122, 0.7);
+  transition: left 200ms ease;
+  pointer-events: none;
+}
+.dial-stops {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+}
+.dial-stop {
+  position: relative;
+  min-height: 44px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dial-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  cursor: pointer;
+}
+.dial-stop::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  width: 1.5px;
+  height: 14px;
+  background: #55636e;
+}
+.dial-stop[aria-pressed='true'] {
+  color: var(--sun);
+}
+.dial-stop:hover {
+  color: #eef2f7;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.tuning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--btn-bg);
+  color: var(--text);
+  cursor: pointer;
+}
+.knob {
+  width: 84px;
+  height: 84px;
+}
+.knob-pointer {
+  stroke: var(--peach);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform-origin: 52px 52px;
+  transition: transform 200ms ease;
+}
+.play-btn {
+  height: 48px;
+  padding: 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--sun);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.play-btn:hover {
+  background: var(--sun-hover);
+}
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.volume input {
+  width: 130px;
+  min-height: 44px;
+  accent-color: var(--peach-ink);
+}
+
+/* Messages */
+.message {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--btn-bg);
+  font-size: 15px;
+  line-height: 22px;
+}
+.message button {
+  margin-left: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--sun);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Recently played */
+.recent h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.recent ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent li {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--row-line);
+  font-size: 15px;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recent strong {
+  font-weight: 600;
+}
+
+/* Phone */
+@media (max-width: 640px) {
+  .site-header {
+    padding: 18px 16px;
+  }
+  .wordmark {
+    font-size: 28px;
+  }
+  .window-body {
+    padding: 16px;
+  }
+  .radio {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .grille {
+    min-height: 44px;
+    background-size: 30px 16px;
+    background-image: radial-gradient(circle, rgba(162, 84, 26, 0.55) 4px, transparent 4.5px);
+    background-position: 5px 6px;
+  }
+  .radio-main {
+    gap: 14px;
+  }
+  .dial {
+    padding: 16px 0 8px;
+  }
+  .dial-head,
+  .dial-now {
+    padding: 0 16px;
+  }
+  .dial-title {
+    font-size: 30px;
+    line-height: 34px;
+  }
+  .dial-listeners {
+    font-size: 13px;
+  }
+  .dial-desc {
+    display: none;
+  }
+  .dial-scroll {
+    padding: 0 8px;
+  }
+  .dial-scale {
+    width: 576px;
+  }
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .tuning {
+    justify-content: center;
+    gap: 18px;
+  }
+  .knob {
+    width: 68px;
+    height: 68px;
+  }
+  .play-btn {
+    justify-content: center;
+  }
+  .volume input {
+    flex: 1;
+    width: auto;
+  }
+  .recent li:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dial-needle,
+  .knob-pointer {
+    transition: none;
+  }
+}
