@@ -6,6 +6,7 @@ import RecentlyPlayed from './components/RecentlyPlayed'
 import Scene from './components/Scene'
 import { fetchChannels, type Channel, type Track } from './somafm'
 import { loadStored, saveStored } from './storage'
+import { writeShared } from './sharedCookie'
 import { usePlayer } from './usePlayer'
 import './styles.css'
 
@@ -52,6 +53,11 @@ export default function App() {
   const index = Math.max(0, list.findIndex((c) => c.id === selectedId))
   const current = list[index]
   const currentId = current?.id ?? selectedId
+
+  // Let the world follow along: the station, the volume and whether it is playing.
+  useEffect(() => {
+    writeShared({ channelId: currentId, volume, on: playing })
+  }, [currentId, volume, playing])
 
   const select = useCallback(
     (id: string) => {
