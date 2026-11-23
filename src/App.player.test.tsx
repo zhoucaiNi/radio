@@ -35,6 +35,8 @@ const { default: App } = await import('./App')
 
 beforeEach(() => {
   localStorage.clear()
+  document.cookie = 'radio=; Path=/; Max-Age=0'
+  document.cookie = 'radio-world=; Path=/; Max-Age=0'
   vi.stubGlobal('Audio', FakeAudio)
   somafm.fetchChannels.mockReset().mockResolvedValue(channels)
   somafm.fetchStreams.mockReset().mockImplementation((id: string) => Promise.resolve([`https://ice2.somafm.com/${id}-128-mp3`]))
