@@ -6,6 +6,7 @@ import RecentlyPlayed from './components/RecentlyPlayed'
 import Scene from './components/Scene'
 import { fetchChannels, type Channel, type Track } from './somafm'
 import { loadStored, saveStored } from './storage'
+import { readShared, worldPlaying, writeShared } from './sharedCookie'
 import { usePlayer } from './usePlayer'
 import './styles.css'
 
@@ -22,11 +23,24 @@ export default function App() {
   const [stored] = useState(loadStored)
   const [channels, setChannels] = useState<Channel[] | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
-  const [selectedId, setSelectedId] = useState(stored.channelId)
-  const [volume, setVolumeState] = useState(stored.volume)
+  // The cookie is shared with the world and beats this site's own localStorage.
+  const [initial] = useState(() => {
+    const shared = readShared()
+    return {
+      channelId: shared.channelId ?? stored.channelId,
+      volume: shared.volume ?? stored.volume,
+      on: shared.on ?? false,
+    }
+  })
+  const [selectedId, setSelectedId] = useState(initial.channelId)
+  const [volume, setVolumeState] = useState(initial.volume)
+  // `on` is the shared wish for music; player.status is only this page's own audio.
+  const [on, setOn] = useState(initial.on)
+  const [world, setWorld] = useState(worldPlaying)
   const [track, setTrack] = useState<Track | null>(null)
   const player = usePlayer()
-  const playing = player.status === 'playing' || player.status === 'loading'
+  const { status } = player
+  const playing = on && status !== 'blocked'
 
   const load = useCallback(() => {
     setLoadFailed(false)
@@ -38,11 +52,24 @@ export default function App() {
 
   useEffect(load, [load])
 
-  const { prime, setVolume } = player
+  const { prime, setVolume, play, pause } = player
 
   useEffect(() => {
-    setVolume(stored.volume)
-  }, [setVolume, stored.volume])
+    setVolume(initial.volume)
+  }, [setVolume, initial.volume])
+
+  useEffect(() => {
+    writeShared({ channelId: initial.channelId, volume: initial.volume })
+  }, [initial.channelId, initial.volume])
+
+  // Follow the other site: its on/off, and whether a world tab is playing the music.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setOn(readShared().on === true)
+      setWorld(worldPlaying())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     channels?.forEach((c) => prime(c.id))
@@ -53,14 +80,25 @@ export default function App() {
   const current = list[index]
   const currentId = current?.id ?? selectedId
 
+  // This page plays only when the music is wanted and no world tab is already playing it.
+  // A blocked or failed start is not retried here: pressing play is the retry.
+  useEffect(() => {
+    if (world || !on) {
+      if (status !== 'idle') pause()
+    } else if (status === 'idle') {
+      play(currentId)
+    }
+  }, [world, on, status, currentId, play, pause])
+
   const select = useCallback(
     (id: string) => {
       setSelectedId(id)
       setTrack(null)
       saveStored({ channelId: id, volume })
-      if (playing) player.play(id)
+      writeShared({ channelId: id })
+      if (status === 'playing' || status === 'loading') player.play(id)
     },
-    [playing, player, volume],
+    [status, player, volume],
   )
 
   const step = useCallback(
@@ -72,14 +110,17 @@ export default function App() {
   )
 
   const toggle = useCallback(() => {
-    if (playing) player.pause()
-    else player.play(currentId)
+    writeShared({ on: !playing })
+    setOn(!playing)
+    // Starting must happen inside the click; an effect would be too late for Safari.
+    if (!playing && !worldPlaying()) player.play(currentId)
   }, [playing, player, currentId])
 
   const changeVolume = (v: number) => {
     setVolumeState(v)
     player.setVolume(v)
     saveStored({ channelId: currentId, volume: v })
+    writeShared({ volume: v })
   }
 
   useEffect(() => {
@@ -123,9 +164,19 @@ export default function App() {
               <div className="grille" aria-hidden="true" />
               <div className="radio-main">
                 <Dial channels={list} selectedId={currentId} track={track} onSelect={select} />
-                {player.status === 'error' && (
+                {status === 'error' && (
                   <p className="message" role="status">
                     This station's quiet — try another
+                  </p>
+                )}
+                {world && on && (
+                  <p className="message" role="status">
+                    playing in the world
+                  </p>
+                )}
+                {status === 'blocked' && (
+                  <p className="message" role="status">
+                    tap play to listen here
                   </p>
                 )}
                 <Controls
@@ -137,7 +188,7 @@ export default function App() {
                   onToggle={toggle}
                   onVolume={changeVolume}
                 />
-                <RecentlyPlayed channelId={currentId} active={playing} onCurrent={setTrack} />
+                <RecentlyPlayed channelId={currentId} active={on} onCurrent={setTrack} />
               </div>
             </div>
           ) : (

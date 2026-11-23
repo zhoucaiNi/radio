@@ -46,10 +46,19 @@ describe('usePlayer', () => {
 
   it('ends in error when play() rejects on every mirror', async () => {
     const { audio, hook } = setup()
-    audio.play.mockImplementation(() => Promise.reject(new DOMException('nope', 'NotAllowedError')))
+    audio.play.mockImplementation(() => Promise.reject(new Error('nope')))
     await act(() => hook.result.current.play('lush'))
     await waitFor(() => expect(hook.result.current.status).toBe('error'))
     expect(audio.play).toHaveBeenCalledTimes(3)
+  })
+
+  it('reports blocked, not error, when the browser refuses to autoplay, and does not walk the mirrors', async () => {
+    const { audio, hook } = setup()
+    audio.play.mockImplementation(() => Promise.reject(new DOMException('nope', 'NotAllowedError')))
+    await act(() => hook.result.current.play('lush'))
+    await waitFor(() => expect(hook.result.current.status).toBe('blocked'))
+    expect(audio.play).toHaveBeenCalledTimes(1)
+    expect(audio.src).toBe(mirrors('lush')[0])
   })
 
   it('advances once when play() rejects and an error event fires for the same mirror', async () => {

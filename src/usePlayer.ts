@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchStreams } from './somafm'
 
-export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'error'
+export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'blocked' | 'error'
 
 type Options = {
   createAudio?: () => HTMLAudioElement
@@ -37,7 +37,17 @@ export function usePlayer({ createAudio = () => new Audio(), getStreams = fetchS
       }
       const el = audio()
       el.src = attempt.streams[index]
-      el.play().catch(() => load(attempt, index + 1))
+      el.play().catch((e: unknown) => {
+        if ((e as { name?: string } | null)?.name === 'NotAllowedError') {
+          // The browser wants a tap first; another mirror would be refused too.
+          if (attemptRef.current === attempt) {
+            attemptRef.current = null
+            setStatus('blocked')
+          }
+          return
+        }
+        load(attempt, index + 1)
+      })
     },
     [audio],
   )
